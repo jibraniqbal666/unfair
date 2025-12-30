@@ -453,6 +453,8 @@ dependencies {
     implementation libs.hoko.blur
 
     implementation libs.androidx.window
+
+    implementation projects.moment
 }
 
 ksp {

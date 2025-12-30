@@ -83,6 +83,7 @@ import com.android.launcher3.widget.LauncherWidgetHolder
 import com.android.launcher3.widget.RoundedCornerEnforcement
 import com.android.systemui.plugins.shared.LauncherOverlayManager
 import com.android.systemui.shared.system.QuickStepContract
+import com.unfair.moment.UnfairActivity
 import com.kieronquinn.app.smartspacer.sdk.client.SmartspacerClient
 import com.patrykmichalik.opto.core.firstBlocking
 import com.patrykmichalik.opto.core.onEach
@@ -324,17 +325,18 @@ class LawnchairLauncher : QuickstepLauncher() {
     }
 
     override fun showDefaultOptions(x: Float, y: Float) {
-        val showWallpaperCarousel = "+carousel" in preferenceManager2.launcherPopupOrder.firstBlocking()
-
-        if (showWallpaperCarousel) {
-            show<LawnchairLauncher>(
-                this,
-                getPopupTarget(x, y),
-                OptionsPopupView.getOptions(this),
-            )
-        } else {
-            super.showDefaultOptions(x, y)
-        }
+//        val showWallpaperCarousel = "+carousel" in preferenceManager2.launcherPopupOrder.firstBlocking()
+//
+//        if (showWallpaperCarousel) {
+//            show<LawnchairLauncher>(
+//                this,
+//                getPopupTarget(x, y),
+//                OptionsPopupView.getOptions(this),
+//            )
+//        } else {
+//            super.showDefaultOptions(x, y)
+//        }
+        startActivity(Intent(this, UnfairActivity::class.java))
     }
 
     private fun <T> show(
