@@ -5,14 +5,21 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.unfair.moment.database.AppSelectionDatabase
+import com.unfair.moment.database.AppSelectionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ModeViewModel(application: Application) : AndroidViewModel(application) {
-    private val _currentMode = MutableStateFlow<Mode?>(null)
-    val currentMode: StateFlow<Mode?> = _currentMode.asStateFlow()
+class AppSelectViewModel(application: Application) : AndroidViewModel(application) {
+    private val database = AppSelectionDatabase.getDatabase(application)
+    private val repository = AppSelectionRepository(
+        database.appSelectionDao(),
+        database.savedModeDao(),
+    )
+
+    private val _modeType = MutableStateFlow<ModeType?>(null)
 
     private val _availableApps = MutableStateFlow<List<AppInfo>>(emptyList())
     val availableApps: StateFlow<List<AppInfo>> = _availableApps.asStateFlow()
@@ -24,8 +31,17 @@ class ModeViewModel(application: Application) : AndroidViewModel(application) {
         loadInstalledApps()
     }
 
-    fun selectMode(modeType: ModeType) {
-        _currentMode.value = Mode(type = modeType, selectedApps = _selectedApps.value)
+    fun setMode(modeType: ModeType) {
+        _modeType.value = modeType
+
+        viewModelScope.launch {
+            val savedMode = repository.loadSavedMode(modeType.id)
+            savedMode?.let { saveMode ->
+                _selectedApps.value = _availableApps.value.filter { app ->
+                    saveMode.selectedApps.any { app.packageName == it.packageName }
+                }
+            }
+        }
     }
 
     fun toggleAppSelection(app: AppInfo) {
@@ -38,8 +54,10 @@ class ModeViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         _selectedApps.value = current
-        _currentMode.value?.let { mode ->
-            _currentMode.value = mode.copy(selectedApps = current)
+        _modeType.value?.let { modeType ->
+            viewModelScope.launch {
+                repository.saveAppSelectionsForMode(modeType.id, current)
+            }
         }
     }
 
@@ -47,18 +65,11 @@ class ModeViewModel(application: Application) : AndroidViewModel(application) {
         val current = _selectedApps.value.toMutableList()
         current.remove(app)
         _selectedApps.value = current
-        _currentMode.value?.let { mode ->
-            _currentMode.value = mode.copy(selectedApps = current)
+        _modeType.value?.let { modeType ->
+            viewModelScope.launch {
+                repository.saveAppSelectionsForMode(modeType.id, current)
+            }
         }
-    }
-
-    fun clearSelection() {
-        _selectedApps.value = emptyList()
-    }
-
-    fun launchMode() {
-        // Mode is launched - the main screen will show the selected apps
-        // This could trigger hiding other apps, showing only selected ones, etc.
     }
 
     private fun loadInstalledApps() {
@@ -77,7 +88,7 @@ class ModeViewModel(application: Application) : AndroidViewModel(application) {
                             AppInfo(
                                 packageName = appInfo.packageName,
                                 name = name,
-                                icon = icon
+                                icon = icon,
                             )
                         } else null
                     } catch (e: Exception) {
@@ -95,7 +106,7 @@ class ModeViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             _availableApps.value.filter {
                 it.name.contains(query, ignoreCase = true) ||
-                it.packageName.contains(query, ignoreCase = true)
+                    it.packageName.contains(query, ignoreCase = true)
             }
         }
     }

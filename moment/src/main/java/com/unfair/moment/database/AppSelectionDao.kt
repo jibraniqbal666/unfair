@@ -1,0 +1,92 @@
+package com.unfair.moment.database
+
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface AppSelectionDao {
+
+    @Query("SELECT * FROM app_selections WHERE mode_type_id = :modeTypeId ORDER BY selection_order ASC")
+    fun getAppSelectionsForMode(modeTypeId: String): Flow<List<AppSelectionEntity>>
+
+    @Query("SELECT * FROM app_selections WHERE mode_type_id = :modeTypeId ORDER BY selection_order ASC")
+    suspend fun getAppSelectionsForModeSync(modeTypeId: String): List<AppSelectionEntity>
+
+    @Query("SELECT * FROM app_selections WHERE mode_type_id = :modeTypeId ORDER BY selection_order ASC")
+    fun getAppSelectionsForModeSyncFlow(modeTypeId: String): Flow<List<AppSelectionEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAppSelection(appSelection: AppSelectionEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAppSelections(appSelections: List<AppSelectionEntity>)
+
+    @Delete
+    suspend fun deleteAppSelection(appSelection: AppSelectionEntity)
+
+    @Query("DELETE FROM app_selections WHERE mode_type_id = :modeTypeId")
+    suspend fun clearAppSelectionsForMode(modeTypeId: String)
+
+    @Query("DELETE FROM app_selections WHERE mode_type_id = :modeTypeId AND package_name = :packageName")
+    suspend fun removeAppFromMode(modeTypeId: String, packageName: String)
+
+    @Transaction
+    suspend fun saveAppSelectionsForMode(
+        modeTypeId: String,
+        appSelections: List<AppSelectionEntity>,
+    ) {
+        clearAppSelectionsForMode(modeTypeId)
+        insertAppSelections(appSelections)
+    }
+}
+
+@Dao
+interface SavedModeDao {
+
+    @Query("SELECT * FROM saved_modes")
+    fun getAllSavedModes(): Flow<List<SavedModeEntity>>
+
+    @Query("SELECT * FROM saved_modes WHERE mode_type_id = :modeTypeId")
+    suspend fun getSavedMode(modeTypeId: String): SavedModeEntity?
+
+    @Query("SELECT * FROM saved_modes WHERE is_active = 1 LIMIT 1")
+    suspend fun getActiveMode(): SavedModeEntity?
+
+    @Query("SELECT * FROM saved_modes WHERE is_active = 1 LIMIT 1")
+    fun getActiveModeFlow(): Flow<SavedModeEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSavedMode(savedMode: SavedModeEntity)
+
+    @Update
+    suspend fun updateSavedMode(savedMode: SavedModeEntity)
+
+    @Query("UPDATE saved_modes SET is_active = 0")
+    suspend fun deactivateAllModes()
+
+    @Transaction
+    suspend fun setActiveMode(modeTypeId: String) {
+        deactivateAllModes()
+        val existingMode = getSavedMode(modeTypeId)
+        if (existingMode != null) {
+            updateSavedMode(
+                existingMode.copy(
+                    isActive = true,
+                    lastUsedAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
+        } else {
+            insertSavedMode(
+                SavedModeEntity(
+                    modeTypeId = modeTypeId,
+                    isActive = true,
+                    lastUsedAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+    }
+
+    @Delete
+    suspend fun deleteSavedMode(savedMode: SavedModeEntity)
+}

@@ -1,13 +1,23 @@
 package com.unfair.moment
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,11 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -56,21 +64,25 @@ fun UnfairApp(
         }
 
         composable(Screen.ModeSelection.route) {
-            ModeSelectionScreen(navController)
+            ModeSelectionScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onNext = {
+                    navController.navigate(it.route)
+                },
+            )
         }
 
-        composable(
-            route = Screen.AppSelection("").route,
-            arguments = listOf(navArgument("modeTypeId") { type = NavType.StringType }),
-        ) { backStackEntry ->
+        composable("app_selection/{modeTypeId}") { backStackEntry ->
             val modeTypeId = backStackEntry.arguments?.getString("modeTypeId") ?: ""
+            Log.i("AppSelection", modeTypeId)
             val modeType = ModeType.MODES.find { it.id == modeTypeId }
                 ?: ModeType.MODES.first()
 
             AppSelectionScreen(
                 modeType = modeType,
                 onContinue = {
-                    viewModel.launchMode()
                     navController.popBackStack(Screen.Main.route, inclusive = false)
                 },
                 onBack = {
@@ -129,7 +141,7 @@ fun UnfairUi(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "✨ Essentials",
+                text = currentMode?.type?.name ?: "Set Mode",
                 fontSize = 14.sp,
                 color = Color.Black,
                 modifier = Modifier

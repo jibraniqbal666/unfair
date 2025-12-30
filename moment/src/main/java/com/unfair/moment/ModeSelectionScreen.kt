@@ -31,32 +31,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 
 @Composable
 fun ModeSelectionScreen(
-    navController: NavController,
     viewModel: ModeViewModel = viewModel(),
+    onBack: () -> Unit,
+    onNext: (Screen) -> Unit,
 ) {
     ModeSelectionUI(
-        onModeSet = { modeType ->
-            viewModel.selectMode(modeType)
-            navController.navigate(Screen.AppSelection.createRoute(modeType.id))
+        onModeSetting = { modeType ->
+            onNext(Screen.AppSelection(modeType.id))
         },
         onModeSelected = {
-            viewModel.selectMode(it)
-            navController.navigate(Screen.AppSelection.createRoute(it.id))
+            viewModel.setMode(it)
+            onBack()
         },
         onAddMoment = {},
         onClose = {
-            navController.popBackStack()
+            onBack()
         },
     )
 }
@@ -65,7 +63,7 @@ fun ModeSelectionScreen(
 @Composable
 fun ModeSelectionUI(
     onModeSelected: (ModeType) -> Unit,
-    onModeSet: (ModeType) -> Unit,
+    onModeSetting: (ModeType) -> Unit,
     onAddMoment: () -> Unit,
     onClose: () -> Unit,
 ) {
@@ -104,7 +102,7 @@ fun ModeSelectionUI(
                 ModeType.MODES.forEach { mode ->
                     ModeTypeCard(
                         mode = mode,
-                        onSet = { onModeSet(mode) },
+                        onSet = { onModeSetting(mode) },
                         onSelect = { onModeSelected(mode) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -187,7 +185,7 @@ fun ModeSelectionScreenPreview() {
         onModeSelected = {},
         onClose = {},
         onAddMoment = {},
-        onModeSet = {},
+        onModeSetting = {},
     )
 }
 
