@@ -115,6 +115,7 @@ fun ModeSelectionUI(
                 modifier = Modifier
                     .size(64.dp)
                     .clickable { onAddMoment() },
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -144,7 +145,7 @@ fun ModeTypeCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
 

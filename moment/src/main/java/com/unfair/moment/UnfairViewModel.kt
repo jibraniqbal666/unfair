@@ -1,6 +1,7 @@
 package com.unfair.moment
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.unfair.moment.database.AppSelectionDatabase
@@ -53,6 +54,12 @@ class UnfairViewModel(application: Application) : AndroidViewModel(application) 
                 _currentMode.value = Mode(type = savedMode.type, selectedApps = appsWithIcons)
             }
         }
+    }
+
+    fun launchApp(app: AppInfo, context: Context) {
+        val pm = getApplication<Application>().packageManager
+        val intent = pm.getLaunchIntentForPackage(app.packageName)
+        context.startActivity(intent)
     }
 }
 
