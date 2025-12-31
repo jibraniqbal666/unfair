@@ -1,5 +1,7 @@
 package com.unfair.moment
 
+import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.unfair.moment.theme.MomentTheme
 
 @Composable
 fun ModeSelectionScreen(
@@ -72,10 +75,18 @@ fun ModeSelectionUI(
             TopAppBar(
                 title = {},
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onClose) {
+                    IconButton(
+                        onClick = onClose,
+                        modifier = Modifier
+                            .padding(top = 16.dp, start = 10.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                CircleShape,
+                            ),
+                    ) {
                         Icon(Icons.Default.Close, contentDescription = "Close")
                     }
                 },
@@ -89,11 +100,13 @@ fun ModeSelectionUI(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.SpaceAround,
         ) {
             Text(
                 text = "What's your next Moment?",
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -194,7 +207,28 @@ fun ModeSelectionScreenPreview() {
 }
 
 @Composable
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+fun ModeSelectionScreenNightPreview() {
+    MomentTheme {
+        ModeSelectionUI(
+            onModeSelected = {},
+            onClose = {},
+            onAddMoment = {},
+            onModeSetting = {},
+        )
+    }
+}
+
+@Composable
 @Preview
 fun ModeTypeCardPreview() {
     ModeTypeCard(ModeType.MODES[0], {}, {})
+}
+
+@Composable
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+fun ModeTypeCardNightPreview() {
+    MomentTheme {
+        ModeTypeCard(ModeType.MODES[0], {}, {})
+    }
 }

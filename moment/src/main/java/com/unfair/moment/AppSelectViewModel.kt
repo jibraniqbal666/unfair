@@ -1,9 +1,10 @@
 package com.unfair.moment
 
 import android.app.Application
+import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.unfair.moment.database.AppSelectionDatabase
 import com.unfair.moment.database.AppSelectionRepository
@@ -75,15 +76,15 @@ class AppSelectViewModel(application: Application) : AndroidViewModel(applicatio
     private fun loadInstalledApps() {
         viewModelScope.launch {
             val pm = getApplication<Application>().packageManager
-            val apps = pm.getInstalledPackages(PackageManager.GET_META_DATA)
+            val intent = Intent(Intent.ACTION_MAIN, null)
+            intent.addCategory(Intent.CATEGORY_LAUNCHER)
+            val apps = pm.queryIntentActivities(intent, 0)
                 .mapNotNull { packageInfo ->
                     try {
-                        val appInfo = packageInfo.applicationInfo ?: return@launch
+                        val appInfo = packageInfo.activityInfo ?: return@launch
                         // Filter out system apps and launcher itself
-                        if (appInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0 ||
-                            appInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP != 0
-                        ) {
-                            val name = pm.getApplicationLabel(appInfo).toString()
+                        if (appInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0 && appInfo.packageName != application.packageName) {
+                            val name = packageInfo.loadLabel(pm).toString()
                             val icon = pm.getApplicationIcon(appInfo.packageName)
                             AppInfo(
                                 packageName = appInfo.packageName,
@@ -91,7 +92,7 @@ class AppSelectViewModel(application: Application) : AndroidViewModel(applicatio
                                 icon = icon,
                             )
                         } else null
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         null
                     }
                 }

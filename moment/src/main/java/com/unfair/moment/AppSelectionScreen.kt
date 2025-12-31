@@ -1,5 +1,6 @@
 package com.unfair.moment
 
+import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.Image
@@ -53,11 +54,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.unfair.moment.theme.MomentTheme
 
 @Composable
 fun AppSelectionScreen(
@@ -108,27 +111,40 @@ fun AppSelectionUI(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Choose up to 5 apps to show in your Moment.") },
+                title = { },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .padding(top = 16.dp, start = 10.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                CircleShape,
+                            ),
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ),
             )
         },
         bottomBar = {
             BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.background,
             ) {
-                Button(
-                    onClick = onContinue,
-                    enabled = selectedApps.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Continue")
+                Box(Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = onContinue,
+                        enabled = selectedApps.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .align(Alignment.BottomCenter),
+                    ) {
+                        Text("Continue")
+                    }
                 }
             }
         },
@@ -140,7 +156,16 @@ fun AppSelectionUI(
                 .padding(16.dp),
         ) {
             Text(
-                text = "These are the apps you'll see. Phone calls will still come through as normal.",
+                text = "Choose up to 5 apps to show in your Moment.",
+                fontSize = 24.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .padding(vertical = 16.dp)
+                    .padding(top = 16.dp),
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = "These are the apps you'll see on your specific moment.",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 16.dp),
@@ -266,6 +291,7 @@ fun AppItem(
             fontSize = 12.sp,
             maxLines = 1,
             modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -321,18 +347,40 @@ fun AppIcon(
 @Preview
 @Composable
 fun AppSelectionUIPreview() {
-    AppSelectionUI(
-        listOf(
-            AppInfo("1", "Chrome"),
-            AppInfo("2", "Spotify"),
-        ),
-        listOf(
-            AppInfo("1", "Chrome"),
-            AppInfo("2", "Spotify"),
-        ),
-        "", {}, {}, {}, {}, {},
-    ) {
+    MomentTheme {
+        AppSelectionUI(
+            listOf(
+                AppInfo("1", "Chrome"),
+                AppInfo("2", "Spotify"),
+            ),
+            listOf(
+                AppInfo("1", "Chrome"),
+                AppInfo("2", "Spotify"),
+            ),
+            "", {}, {}, {}, {}, {},
+        ) {
 
+        }
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun AppSelectionUIDarkPreview() {
+    MomentTheme {
+        AppSelectionUI(
+            listOf(
+                AppInfo("1", "Chrome"),
+                AppInfo("2", "Spotify"),
+            ),
+            listOf(
+                AppInfo("1", "Chrome"),
+                AppInfo("2", "Spotify"),
+            ),
+            "", {}, {}, {}, {}, {},
+        ) {
+
+        }
     }
 }
 

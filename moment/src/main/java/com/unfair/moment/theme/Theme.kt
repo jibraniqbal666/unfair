@@ -25,7 +25,7 @@ private val DarkColorScheme = darkColorScheme(
     background = Color.Black,              // Pure black background
     onBackground = Color.White,            // White text on black background
 
-    surface = Color(0xFF1C1C1C),          // Very dark gray surface
+    surface = Color(0xFF2A2A2A),          // Very dark gray surface
     onSurface = Color.White,              // White text on dark surface
     surfaceVariant = Color(0xFF2C2C2C),   // Medium dark gray for elevated surfaces
     onSurfaceVariant = Color(0xFFD0D0D0), // Light gray text for secondary content
@@ -82,13 +82,13 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun MomentTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }
