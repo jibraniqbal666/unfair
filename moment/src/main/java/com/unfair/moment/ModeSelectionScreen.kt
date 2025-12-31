@@ -116,6 +116,9 @@ fun ModeSelectionUI(
                     .size(64.dp)
                     .clickable { onAddMoment() },
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),

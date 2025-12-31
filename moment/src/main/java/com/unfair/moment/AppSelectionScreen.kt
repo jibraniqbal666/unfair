@@ -51,9 +51,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
@@ -252,10 +252,10 @@ fun AppItem(
                 Icon(
                     Icons.Default.Check,
                     contentDescription = "Selected",
-                    tint = Color.Green,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .background(Color.White, CircleShape)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
                         .padding(2.dp),
                 )
             }
@@ -315,6 +315,24 @@ fun AppIcon(
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         }
+    }
+}
+
+@Preview
+@Composable
+fun AppSelectionUIPreview() {
+    AppSelectionUI(
+        listOf(
+            AppInfo("1", "Chrome"),
+            AppInfo("2", "Spotify"),
+        ),
+        listOf(
+            AppInfo("1", "Chrome"),
+            AppInfo("2", "Spotify"),
+        ),
+        "", {}, {}, {}, {}, {},
+    ) {
+
     }
 }
 

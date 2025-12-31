@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.unfair.moment.theme.MomentTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,10 +41,10 @@ class UnfairActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            MomentTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color.Transparent,
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     UnfairApp()
                 }
@@ -129,7 +130,7 @@ fun UnfairUi(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xCC000000)) // Semi-transparent black background
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
     ) {
         Column(
@@ -141,19 +142,19 @@ fun UnfairUi(
                 text = currentTime,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
                 text = currentDate,
                 fontSize = 18.sp,
-                color = Color.LightGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(16.dp))
             GlassContainer {
                 Text(
                     text = currentMode?.type?.name ?: "Set Mode",
                     fontSize = 18.sp,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .clickable(onClick = onEssentialsClick)
                         .padding(horizontal = 28.dp, vertical = 12.dp),
@@ -171,7 +172,7 @@ fun UnfairUi(
                         Text(
                             text = app.name,
                             fontSize = 20.sp,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(vertical = 8.dp),
                         )
                     }
@@ -180,7 +181,7 @@ fun UnfairUi(
                 Text(
                     text = "No apps selected",
                     fontSize = 20.sp,
-                    color = Color.LightGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             }
