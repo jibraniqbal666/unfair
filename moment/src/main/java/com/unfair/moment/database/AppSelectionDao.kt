@@ -108,6 +108,9 @@ interface DNDDao {
 
     @Update
     suspend fun updateDNDSetting(dndSetting: DNDSettingEntity)
+
+    @Delete
+    suspend fun deleteDNDSetting(dndSetting: DNDSettingEntity)
 }
 
 @Dao

@@ -26,6 +26,9 @@ class ModePreferencesViewModel(application: Application) : AndroidViewModel(appl
     private val _dndEnabled = MutableStateFlow(false)
     val dndEnabled: StateFlow<Boolean> = _dndEnabled.asStateFlow()
 
+    private val _deleted = MutableStateFlow(false)
+    val deleted: StateFlow<Boolean> = _deleted.asStateFlow()
+
     fun setMode(modeTypeId: String) {
         viewModelScope.launch {
             _modeType.value = repository.getModeType(modeTypeId)
@@ -38,6 +41,15 @@ class ModePreferencesViewModel(application: Application) : AndroidViewModel(appl
             _modeType.value?.let {
                 _dndEnabled.value = repository.isDNDEnabled(it.id).not()
                 repository.toggleDND(it.id)
+            }
+        }
+    }
+
+    fun deleteMoment() {
+        viewModelScope.launch {
+            _modeType.value?.let { modeType ->
+                repository.deleteModeType(modeType.id)
+                _deleted.value = true
             }
         }
     }

@@ -12,17 +12,7 @@ data class ModeType(
                 id = "essential",
                 name = "Essential",
                 description = "Start blank and tailor the mode to fit your needs.",
-            ),
-            ModeType(
-                id = "balance",
-                name = "Balance",
-                description = "Unlock your potential by shutting out distractions.",
-            ),
-            ModeType(
-                id = "spring",
-                name = "Spring",
-                description = "Prioritize your body and mind.",
-            ),
+            )
         )
 
         val MODES: List<ModeType>

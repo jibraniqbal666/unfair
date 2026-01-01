@@ -20,7 +20,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoNotDisturb
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,12 +33,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -57,10 +63,16 @@ fun ModePreferencesScreen(
     val modeType by viewModel.modeType.collectAsState()
     val dndPermissionState = rememberDNDPermissionState()
     val isDNDEnabled by viewModel.dndEnabled.collectAsState()
-
+    val deleted by viewModel.deleted.collectAsState()
 
     LaunchedEffect(true) {
         viewModel.setMode(modeTypeId)
+    }
+
+    LaunchedEffect(deleted) {
+        if (deleted) {
+            onBack()
+        }
     }
 
     ModePreferencesUI(
@@ -70,6 +82,7 @@ fun ModePreferencesScreen(
         onBack = onBack,
         onAppSelectionClick = onAppSelectionClick,
         onToggleDND = viewModel::toggleDND,
+        onDelete = viewModel::deleteMoment,
     )
 }
 
@@ -82,8 +95,12 @@ fun ModePreferencesUI(
     onBack: () -> Unit,
     onAppSelectionClick: () -> Unit,
     onToggleDND: () -> Unit,
+    onDelete: () -> Unit = {},
 ) {
     if (modeType == null) return
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -170,6 +187,16 @@ fun ModePreferencesUI(
                 } else null,
             )
 
+            // Delete button for custom moments
+            if (modeType.isCustom) {
+                PreferenceCard(
+                    title = "Delete Moment",
+                    subtitle = "Remove this custom moment permanently",
+                    icon = Icons.Default.Delete,
+                    onClick = { showDeleteDialog = true },
+                )
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
             // Additional info
@@ -199,6 +226,36 @@ fun ModePreferencesUI(
                 }
             }
         }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text("Delete Moment")
+            },
+            text = {
+                Text("Are you sure you want to delete \"${modeType.name}\"? This action cannot be undone.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -282,6 +339,7 @@ fun ModePreferencesScreenPreview() {
             onBack = {},
             onAppSelectionClick = {},
             onToggleDND = {},
+            onDelete = {},
             isDNDEnabled = true,
         )
     }
@@ -303,6 +361,7 @@ fun ModePreferencesScreenNightPreview() {
             onBack = {},
             onAppSelectionClick = {},
             onToggleDND = {},
+            onDelete = {},
             isDNDEnabled = false,
         )
     }

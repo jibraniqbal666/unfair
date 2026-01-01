@@ -138,6 +138,7 @@ class AppSelectionRepository(
                     id = entity.modeTypeId,
                     name = entity.name,
                     description = entity.description,
+                    isCustom = true, // All saved mode types are custom
                 )
             }
         }
@@ -151,10 +152,31 @@ class AppSelectionRepository(
                     id = it.modeTypeId,
                     name = it.name,
                     description = it.description,
+                    isCustom = true, // Custom since it's in the database
                 )
             }
             return null
         }
-        return modeType
+        return modeType // Default modes are not custom
+    }
+
+    suspend fun deleteModeType(modeTypeId: String) {
+        // First delete all related data
+        clearAppSelectionsForMode(modeTypeId)
+
+        // Delete saved mode entry
+        savedModeDao.getSavedMode(modeTypeId)?.let { savedMode ->
+            savedModeDao.deleteSavedMode(savedMode)
+        }
+
+        // Delete DND settings
+        dndDao.getDNDSetting(modeTypeId)?.let { dndSetting ->
+            dndDao.deleteDNDSetting(dndSetting)
+        }
+
+        // Finally delete the mode type
+        modeTypeDao.getModeType(modeTypeId)?.let { modeType ->
+            modeTypeDao.deleteModeType(modeType)
+        }
     }
 }
