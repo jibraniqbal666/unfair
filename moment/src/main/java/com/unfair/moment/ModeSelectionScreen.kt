@@ -131,21 +131,23 @@ fun ModeSelectionUI(
                     )
                 }
             }
-            Card(
-                shape = CircleShape,
-                modifier = Modifier
-                    .size(64.dp)
-                    .clickable { onAddMoment() },
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
+            if (modes.size < 5) {
+                Card(
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clickable { onAddMoment() },
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "content description")
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "content description")
+                    }
                 }
             }
         }
