@@ -10,6 +10,7 @@ class AppSelectionRepository(
     private val appSelectionDao: AppSelectionDao,
     private val savedModeDao: SavedModeDao,
     private val dndDao: DNDDao,
+    private val modeTypeDao: ModeTypeDao,
 ) {
 
     fun getAppSelectionsForMode(modeTypeId: String): Flow<List<AppInfo>> {
@@ -93,8 +94,7 @@ class AppSelectionRepository(
 
     suspend fun loadSavedMode(modeTypeId: String): Mode? {
         val appSelections = appSelectionDao.getAppSelectionsForModeSync(modeTypeId)
-        val modeType =
-            ModeType.MODES.find { it.id == modeTypeId } ?: return null
+        val modeType = getModeType(modeTypeId) ?: return null
         val appInfos = appSelections.map { entity ->
             AppInfo(
                 packageName = entity.packageName,
@@ -117,5 +117,44 @@ class AppSelectionRepository(
     suspend fun isDNDEnabled(modeTypeId: String): Boolean {
         val dndSetting = dndDao.getDNDSetting(modeTypeId)
         return dndSetting?.isEnabled ?: false
+    }
+
+    suspend fun saveModeType(modeType: ModeType) {
+        modeTypeDao.insertModeType(
+            ModeTypeEntity(
+                modeTypeId = modeType.id,
+                name = modeType.name,
+                description = modeType.description,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    fun getSavedModeTypes(): Flow<List<ModeType>> {
+        return modeTypeDao.getAllModeTypes().map {
+            it.map { entity ->
+                ModeType(
+                    id = entity.modeTypeId,
+                    name = entity.name,
+                    description = entity.description,
+                )
+            }
+        }
+    }
+
+    suspend fun getModeType(modeTypeId: String): ModeType? {
+        val modeType = ModeType.MODES.find { it.id == modeTypeId }
+        if (modeType == null) {
+            modeTypeDao.getModeType(modeTypeId)?.let {
+                return ModeType(
+                    id = it.modeTypeId,
+                    name = it.name,
+                    description = it.description,
+                )
+            }
+            return null
+        }
+        return modeType
     }
 }

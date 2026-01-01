@@ -30,6 +30,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -46,8 +48,13 @@ fun ModeSelectionScreen(
     viewModel: ModeViewModel = viewModel(),
     onBack: () -> Unit,
     onNext: (Screen) -> Unit,
+    onAddMoment: () -> Unit = {},
 ) {
+
+    val modes by viewModel.allModes.collectAsState()
+
     ModeSelectionUI(
+        modes,
         onModeSetting = { modeType ->
             onNext(Screen.ModePreferences(modeType.id))
         },
@@ -55,7 +62,7 @@ fun ModeSelectionScreen(
             viewModel.setMode(it)
             onBack()
         },
-        onAddMoment = {},
+        onAddMoment = onAddMoment,
         onClose = {
             onBack()
         },
@@ -65,6 +72,7 @@ fun ModeSelectionScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModeSelectionUI(
+    modes: List<ModeType>,
     onModeSelected: (ModeType) -> Unit,
     onModeSetting: (ModeType) -> Unit,
     onAddMoment: () -> Unit,
@@ -112,7 +120,7 @@ fun ModeSelectionUI(
                 textAlign = TextAlign.Center,
             )
             Column {
-                ModeType.MODES.forEach { mode ->
+                modes.forEach { mode ->
                     ModeTypeCard(
                         mode = mode,
                         onSet = { onModeSetting(mode) },
@@ -199,6 +207,7 @@ fun ModeTypeCard(
 @Preview
 fun ModeSelectionScreenPreview() {
     ModeSelectionUI(
+        modes = ModeType.MODES,
         onModeSelected = {},
         onClose = {},
         onAddMoment = {},
@@ -211,6 +220,7 @@ fun ModeSelectionScreenPreview() {
 fun ModeSelectionScreenNightPreview() {
     MomentTheme {
         ModeSelectionUI(
+            modes = ModeType.MODES,
             onModeSelected = {},
             onClose = {},
             onAddMoment = {},

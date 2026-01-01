@@ -1,6 +1,12 @@
 package com.unfair.moment.database
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -103,3 +109,24 @@ interface DNDDao {
     @Update
     suspend fun updateDNDSetting(dndSetting: DNDSettingEntity)
 }
+
+@Dao
+interface ModeTypeDao {
+
+    @Query("SELECT * FROM mode_types")
+    fun getAllModeTypes(): Flow<List<ModeTypeEntity>>
+
+    @Query("SELECT * FROM mode_types WHERE mode_type_id = :modeTypeId")
+    suspend fun getModeType(modeTypeId: String): ModeTypeEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertModeType(modeType: ModeTypeEntity)
+
+    @Update
+    suspend fun updateModeType(modeType: ModeTypeEntity)
+
+    @Delete
+    suspend fun deleteModeType(modeType: ModeTypeEntity)
+}
+
+

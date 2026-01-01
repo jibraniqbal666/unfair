@@ -16,17 +16,20 @@ class ModePreferencesViewModel(application: Application) : AndroidViewModel(appl
         database.appSelectionDao(),
         database.savedModeDao(),
         database.dndDao(),
+        database.modeTypeDao(),
     )
 
     private var _modeType = MutableStateFlow<ModeType?>(null)
+    val modeType: StateFlow<ModeType?> = _modeType.asStateFlow()
+
 
     private val _dndEnabled = MutableStateFlow(false)
     val dndEnabled: StateFlow<Boolean> = _dndEnabled.asStateFlow()
 
-    fun setMode(modeType: ModeType) {
-        _modeType.value = modeType
+    fun setMode(modeTypeId: String) {
         viewModelScope.launch {
-            _dndEnabled.value = repository.isDNDEnabled(modeType.id)
+            _modeType.value = repository.getModeType(modeTypeId)
+            _dndEnabled.value = repository.isDNDEnabled(modeTypeId)
         }
     }
 

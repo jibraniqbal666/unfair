@@ -64,3 +64,23 @@ data class DNDSettingEntity(
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis(),
 )
+
+@Entity(tableName = "mode_types")
+data class ModeTypeEntity(
+    @PrimaryKey
+    @ColumnInfo(name = "mode_type_id")
+    val modeTypeId: String,
+
+    @ColumnInfo(name = "name")
+    val name: String,
+
+    @ColumnInfo(name = "description")
+    val description: String,
+
+
+    @ColumnInfo(name = "created_at")
+    val createdAt: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
+)

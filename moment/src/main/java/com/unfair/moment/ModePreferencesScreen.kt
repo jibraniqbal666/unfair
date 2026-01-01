@@ -49,16 +49,18 @@ import com.unfair.moment.theme.MomentTheme
 
 @Composable
 fun ModePreferencesScreen(
-    modeType: ModeType,
+    modeTypeId: String,
     onBack: () -> Unit,
     onAppSelectionClick: () -> Unit,
     viewModel: ModePreferencesViewModel = viewModel(),
 ) {
+    val modeType by viewModel.modeType.collectAsState()
     val dndPermissionState = rememberDNDPermissionState()
     val isDNDEnabled by viewModel.dndEnabled.collectAsState()
 
+
     LaunchedEffect(true) {
-        viewModel.setMode(modeType)
+        viewModel.setMode(modeTypeId)
     }
 
     ModePreferencesUI(
@@ -74,13 +76,14 @@ fun ModePreferencesScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModePreferencesUI(
-    modeType: ModeType,
+    modeType: ModeType?,
     dndPermissionState: DNDPermissionState,
     isDNDEnabled: Boolean,
     onBack: () -> Unit,
     onAppSelectionClick: () -> Unit,
     onToggleDND: () -> Unit,
 ) {
+    if (modeType == null) return
     Scaffold(
         topBar = {
             TopAppBar(

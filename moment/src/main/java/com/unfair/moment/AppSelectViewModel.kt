@@ -19,6 +19,7 @@ class AppSelectViewModel(application: Application) : AndroidViewModel(applicatio
         database.appSelectionDao(),
         database.savedModeDao(),
         database.dndDao(),
+        database.modeTypeDao(),
     )
 
     private val _modeType = MutableStateFlow<ModeType?>(null)
@@ -33,11 +34,10 @@ class AppSelectViewModel(application: Application) : AndroidViewModel(applicatio
         loadInstalledApps()
     }
 
-    fun setMode(modeType: ModeType) {
-        _modeType.value = modeType
-
+    fun setMode(modeTypeId: String) {
         viewModelScope.launch {
-            val savedMode = repository.loadSavedMode(modeType.id)
+            _modeType.value = repository.getModeType(modeTypeId)
+            val savedMode = repository.loadSavedMode(modeTypeId)
             savedMode?.let { saveMode ->
                 _selectedApps.value = _availableApps.value.filter { app ->
                     saveMode.selectedApps.any { app.packageName == it.packageName }

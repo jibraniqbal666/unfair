@@ -64,7 +64,7 @@ import com.unfair.moment.theme.MomentTheme
 
 @Composable
 fun AppSelectionScreen(
-    modeType: ModeType,
+    modeTypeId: String,
     viewModel: AppSelectViewModel = viewModel(),
     onContinue: () -> Unit,
     onBack: () -> Unit,
@@ -79,7 +79,7 @@ fun AppSelectionScreen(
     }
 
     LaunchedEffect(true) {
-        viewModel.setMode(modeType)
+        viewModel.setMode(modeTypeId)
     }
 
     AppSelectionUI(

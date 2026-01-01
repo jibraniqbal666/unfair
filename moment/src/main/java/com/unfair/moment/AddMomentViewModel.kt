@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ModeViewModel(application: Application) : AndroidViewModel(application) {
+class AddMomentViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppSelectionDatabase.getDatabase(application)
     private val repository = AppSelectionRepository(
         database.appSelectionDao(),
@@ -19,23 +19,19 @@ class ModeViewModel(application: Application) : AndroidViewModel(application) {
         database.modeTypeDao(),
     )
 
-    private val _allModes = MutableStateFlow<List<ModeType>>(emptyList())
-    val allModes: StateFlow<List<ModeType>> = _allModes.asStateFlow()
+    private val _saved = MutableStateFlow(false)
+    val saved: StateFlow<Boolean> = _saved.asStateFlow()
 
-    init {
+    fun saveMoment(name: String, description: String) {
         viewModelScope.launch {
-            repository.getSavedModeTypes().collect {
-                _allModes.value = ModeType.DEFAULT_MODES + it
-            }
+            val modeType = ModeType(
+                id = "custom_${System.currentTimeMillis()}",
+                name = name,
+                description = description,
+            )
+            repository.saveModeType(modeType)
+            _saved.value = true
         }
     }
 
-
-    fun setMode(modeType: ModeType) {
-        viewModelScope.launch {
-            repository.setActiveMode(modeType.id)
-        }
-    }
 }
-
-

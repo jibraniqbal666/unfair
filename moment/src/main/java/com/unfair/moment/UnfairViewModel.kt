@@ -20,6 +20,7 @@ class UnfairViewModel(application: Application) : AndroidViewModel(application) 
         database.appSelectionDao(),
         database.savedModeDao(),
         database.dndDao(),
+        database.modeTypeDao(),
     )
 
     private val _currentMode = MutableStateFlow<Mode?>(null)

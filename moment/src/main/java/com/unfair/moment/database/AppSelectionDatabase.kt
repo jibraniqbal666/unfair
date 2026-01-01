@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [AppSelectionEntity::class, SavedModeEntity::class, DNDSettingEntity::class],
+    entities = [AppSelectionEntity::class, SavedModeEntity::class, DNDSettingEntity::class, ModeTypeEntity::class],
     version = 1,
     exportSchema = false,
 )
@@ -15,6 +15,7 @@ abstract class AppSelectionDatabase : RoomDatabase() {
     abstract fun appSelectionDao(): AppSelectionDao
     abstract fun savedModeDao(): SavedModeDao
     abstract fun dndDao(): DNDDao
+    abstract fun modeTypeDao(): ModeTypeDao
 
     companion object {
         @Volatile

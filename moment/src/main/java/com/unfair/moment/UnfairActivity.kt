@@ -74,16 +74,17 @@ fun UnfairApp() {
                 onNext = {
                     navController.navigate(it.route)
                 },
+                onAddMoment = {
+                    navController.navigate(Screen.AddMoment.route)
+                },
             )
         }
 
         composable("mode_preferences/{modeTypeId}") { backStackEntry ->
             val modeTypeId = backStackEntry.arguments?.getString("modeTypeId") ?: ""
-            val modeType = ModeType.MODES.find { it.id == modeTypeId }
-                ?: ModeType.MODES.first()
 
             ModePreferencesScreen(
-                modeType = modeType,
+                modeTypeId = modeTypeId,
                 onBack = {
                     navController.popBackStack()
                 },
@@ -95,11 +96,9 @@ fun UnfairApp() {
 
         composable("app_selection/{modeTypeId}") { backStackEntry ->
             val modeTypeId = backStackEntry.arguments?.getString("modeTypeId") ?: ""
-            val modeType = ModeType.MODES.find { it.id == modeTypeId }
-                ?: ModeType.MODES.first()
 
             AppSelectionScreen(
-                modeType = modeType,
+                modeTypeId = modeTypeId,
                 onContinue = {
                     navController.popBackStack(Screen.Main.route, inclusive = false)
                 },
@@ -108,6 +107,14 @@ fun UnfairApp() {
                 },
                 onClose = {
                     navController.popBackStack(Screen.Main.route, inclusive = false)
+                },
+            )
+        }
+
+        composable(Screen.AddMoment.route) {
+            AddMomentScreen(
+                onBack = {
+                    navController.popBackStack()
                 },
             )
         }
