@@ -18,6 +18,7 @@ class AppSelectViewModel(application: Application) : AndroidViewModel(applicatio
     private val repository = AppSelectionRepository(
         database.appSelectionDao(),
         database.savedModeDao(),
+        database.dndDao(),
     )
 
     private val _modeType = MutableStateFlow<ModeType?>(null)

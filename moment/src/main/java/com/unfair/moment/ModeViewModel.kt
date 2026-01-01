@@ -12,6 +12,7 @@ class ModeViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = AppSelectionRepository(
         database.appSelectionDao(),
         database.savedModeDao(),
+        database.dndDao(),
     )
 
     fun setMode(modeType: ModeType) {

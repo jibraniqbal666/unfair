@@ -39,6 +39,7 @@ data class AppInfo(
 data class Mode(
     val type: ModeType,
     val selectedApps: List<AppInfo> = emptyList(),
+    val isDNDActive: Boolean = false,
 )
 
 

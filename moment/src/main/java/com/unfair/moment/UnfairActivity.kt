@@ -17,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -76,9 +77,24 @@ fun UnfairApp() {
             )
         }
 
+        composable("mode_preferences/{modeTypeId}") { backStackEntry ->
+            val modeTypeId = backStackEntry.arguments?.getString("modeTypeId") ?: ""
+            val modeType = ModeType.MODES.find { it.id == modeTypeId }
+                ?: ModeType.MODES.first()
+
+            ModePreferencesScreen(
+                modeType = modeType,
+                onBack = {
+                    navController.popBackStack()
+                },
+                onAppSelectionClick = {
+                    navController.navigate(Screen.AppSelection(modeTypeId).route)
+                },
+            )
+        }
+
         composable("app_selection/{modeTypeId}") { backStackEntry ->
             val modeTypeId = backStackEntry.arguments?.getString("modeTypeId") ?: ""
-            Log.i("AppSelection", modeTypeId)
             val modeType = ModeType.MODES.find { it.id == modeTypeId }
                 ?: ModeType.MODES.first()
 
@@ -104,10 +120,12 @@ fun UnfairScreen(
     viewModel: UnfairViewModel = viewModel(),
 ) {
     val currentMode by viewModel.currentMode.collectAsState()
+    val dndPermissionState = rememberDNDPermissionState()
     val context = LocalContext.current
 
     UnfairUi(
         currentMode,
+        dndPermissionState,
         onEssentialsClick = {
             navController.navigate(Screen.ModeSelection.route)
         },
@@ -120,12 +138,16 @@ fun UnfairScreen(
 @Composable
 fun UnfairUi(
     currentMode: Mode?,
+    dndPermissionState: DNDPermissionState,
     onEssentialsClick: () -> Unit,
     onAppClick: (app: AppInfo) -> Unit,
 ) {
     val currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
     val currentDate = SimpleDateFormat("EEE, dd MMM", Locale.getDefault()).format(Date())
     val selectedApps = currentMode?.selectedApps ?: emptyList()
+    LaunchedEffect(currentMode?.isDNDActive) {
+        dndPermissionState.setDNDEnabled(currentMode?.isDNDActive ?: false)
+    }
 
     Box(
         modifier = Modifier
@@ -204,6 +226,13 @@ fun UnfairUiPreview() {
                 AppInfo("5", "WhatsApp"),
             ),
         ),
+        dndPermissionState = DNDPermissionState(
+            hasPermission = true,
+            isDNDActive = false,
+            requestPermission = {},
+            setDNDEnabled = {},
+            refreshPermissionState = {},
+        ),
         {}, {},
     )
 }
@@ -214,6 +243,13 @@ fun UnfairUi2Preview() {
     UnfairUi(
         Mode(
             ModeType.MODES.first(),
+        ),
+        dndPermissionState = DNDPermissionState(
+            hasPermission = true,
+            isDNDActive = false,
+            requestPermission = {},
+            setDNDEnabled = {},
+            refreshPermissionState = {},
         ),
         {}, {},
     )

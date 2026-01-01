@@ -19,6 +19,7 @@ class UnfairViewModel(application: Application) : AndroidViewModel(application) 
     private val repository = AppSelectionRepository(
         database.appSelectionDao(),
         database.savedModeDao(),
+        database.dndDao(),
     )
 
     private val _currentMode = MutableStateFlow<Mode?>(null)
@@ -51,7 +52,13 @@ class UnfairViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
 
-                _currentMode.value = Mode(type = savedMode.type, selectedApps = appsWithIcons)
+                val dndActive = repository.isDNDEnabled(modeType.modeTypeId)
+
+                _currentMode.value = Mode(
+                    type = savedMode.type,
+                    selectedApps = appsWithIcons,
+                    isDNDActive = dndActive,
+                )
             }
         }
     }

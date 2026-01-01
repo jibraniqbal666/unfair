@@ -49,7 +49,7 @@ fun ModeSelectionScreen(
 ) {
     ModeSelectionUI(
         onModeSetting = { modeType ->
-            onNext(Screen.AppSelection(modeType.id))
+            onNext(Screen.ModePreferences(modeType.id))
         },
         onModeSelected = {
             viewModel.setMode(it)

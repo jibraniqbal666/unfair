@@ -90,3 +90,16 @@ interface SavedModeDao {
     @Delete
     suspend fun deleteSavedMode(savedMode: SavedModeEntity)
 }
+
+@Dao
+interface DNDDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSavedMode(dndSetting: DNDSettingEntity)
+
+    @Query("SELECT * FROM dnd_settings WHERE mode_type_id = :modeTypeId")
+    suspend fun getDNDSetting(modeTypeId: String): DNDSettingEntity?
+
+    @Update
+    suspend fun updateDNDSetting(dndSetting: DNDSettingEntity)
+}

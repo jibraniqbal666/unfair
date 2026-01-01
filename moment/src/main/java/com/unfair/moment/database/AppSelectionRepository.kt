@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.map
 class AppSelectionRepository(
     private val appSelectionDao: AppSelectionDao,
     private val savedModeDao: SavedModeDao,
+    private val dndDao: DNDDao,
 ) {
 
     fun getAppSelectionsForMode(modeTypeId: String): Flow<List<AppInfo>> {
@@ -102,5 +103,19 @@ class AppSelectionRepository(
             )
         }
         return Mode(type = modeType, selectedApps = appInfos)
+    }
+
+    suspend fun toggleDND(modeTypeId: String) {
+        val dndSetting = dndDao.getDNDSetting(modeTypeId)
+        if (dndSetting != null) {
+            dndDao.updateDNDSetting(dndSetting.copy(isEnabled = !dndSetting.isEnabled))
+        } else {
+            dndDao.insertSavedMode(DNDSettingEntity(modeTypeId = modeTypeId, isEnabled = true))
+        }
+    }
+
+    suspend fun isDNDEnabled(modeTypeId: String): Boolean {
+        val dndSetting = dndDao.getDNDSetting(modeTypeId)
+        return dndSetting?.isEnabled ?: false
     }
 }
