@@ -50,7 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.unfair.moment.theme.MomentTheme
 
 @Composable
@@ -58,7 +58,7 @@ fun ModePreferencesScreen(
     modeTypeId: String,
     onBack: () -> Unit,
     onAppSelectionClick: () -> Unit,
-    viewModel: ModePreferencesViewModel = viewModel(),
+    viewModel: ModePreferencesViewModel = hiltViewModel(),
 ) {
     val modeType by viewModel.modeType.collectAsState()
     val dndPermissionState = rememberDNDPermissionState()
@@ -243,18 +243,18 @@ fun ModePreferencesUI(
                     onClick = {
                         showDeleteDialog = false
                         onDelete()
-                    }
+                    },
                 ) {
                     Text("Delete")
                 }
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showDeleteDialog = false }
+                    onClick = { showDeleteDialog = false },
                 ) {
                     Text("Cancel")
                 }
-            }
+            },
         )
     }
 }

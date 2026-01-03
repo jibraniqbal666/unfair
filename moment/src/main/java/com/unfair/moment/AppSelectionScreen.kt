@@ -59,13 +59,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.unfair.moment.theme.MomentTheme
 
 @Composable
 fun AppSelectionScreen(
     modeTypeId: String,
-    viewModel: AppSelectViewModel = viewModel(),
+    viewModel: AppSelectViewModel = hiltViewModel(),
     onContinue: () -> Unit,
     onBack: () -> Unit,
     onClose: () -> Unit,

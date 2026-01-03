@@ -3,25 +3,21 @@ package com.unfair.moment
 import android.app.Application
 import android.content.Intent
 import android.content.pm.ApplicationInfo
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.application
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.unfair.moment.database.AppSelectionDatabase
 import com.unfair.moment.database.AppSelectionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AppSelectViewModel(application: Application) : AndroidViewModel(application) {
-    private val database = AppSelectionDatabase.getDatabase(application)
-    private val repository = AppSelectionRepository(
-        database.appSelectionDao(),
-        database.savedModeDao(),
-        database.dndDao(),
-        database.modeTypeDao(),
-    )
-
+@HiltViewModel
+class AppSelectViewModel @Inject constructor(
+    val application: Application,
+    val repository: AppSelectionRepository,
+) : ViewModel() {
     private val _modeType = MutableStateFlow<ModeType?>(null)
 
     private val _availableApps = MutableStateFlow<List<AppInfo>>(emptyList())
@@ -76,7 +72,7 @@ class AppSelectViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun loadInstalledApps() {
         viewModelScope.launch {
-            val pm = getApplication<Application>().packageManager
+            val pm = application.packageManager
             val intent = Intent(Intent.ACTION_MAIN, null)
             intent.addCategory(Intent.CATEGORY_LAUNCHER)
             val apps = pm.queryIntentActivities(intent, 0)

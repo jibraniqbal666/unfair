@@ -40,12 +40,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.unfair.moment.theme.MomentTheme
 
 @Composable
 fun ModeSelectionScreen(
-    viewModel: ModeViewModel = viewModel(),
+    viewModel: ModeViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onNext: (Screen) -> Unit,
     onAddMoment: () -> Unit = {},

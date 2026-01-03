@@ -2,10 +2,11 @@ package com.unfair.moment
 
 import android.app.Application
 import android.content.Context
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.unfair.moment.database.AppSelectionDatabase
 import com.unfair.moment.database.AppSelectionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,16 +14,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
-class UnfairViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val database = AppSelectionDatabase.getDatabase(application)
-    private val repository = AppSelectionRepository(
-        database.appSelectionDao(),
-        database.savedModeDao(),
-        database.dndDao(),
-        database.modeTypeDao(),
-    )
-
+@HiltViewModel
+class UnfairViewModel @Inject constructor(
+    val application: Application,
+    val repository: AppSelectionRepository,
+) : ViewModel() {
     private val _currentMode = MutableStateFlow<Mode?>(null)
     val currentMode: StateFlow<Mode?> = _currentMode.asStateFlow()
 
@@ -41,7 +37,7 @@ class UnfairViewModel(application: Application) : AndroidViewModel(application) 
                 // Update the selected apps with icons from package manager
                 val appsWithIcons = selectedApps.map { appInfo ->
                     try {
-                        val pm = getApplication<Application>().packageManager
+                        val pm = application.packageManager
                         val icon = pm.getApplicationIcon(appInfo.packageName)
                         AppInfo(
                             packageName = appInfo.packageName,
@@ -65,7 +61,7 @@ class UnfairViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun launchApp(app: AppInfo, context: Context) {
-        val pm = getApplication<Application>().packageManager
+        val pm = application.packageManager
         val intent = pm.getLaunchIntentForPackage(app.packageName)
         context.startActivity(intent)
     }
