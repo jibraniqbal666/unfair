@@ -41,6 +41,15 @@ class ModePreferencesViewModel @Inject constructor(
         }
     }
 
+    fun updateModeType(name: String, description: String) {
+        viewModelScope.launch {
+            _modeType.value?.let { modeType ->
+                repository.updateModeType(modeType.id, name, description)
+                _modeType.value = repository.getModeType(modeType.id)
+            }
+        }
+    }
+
     fun deleteMoment() {
         viewModelScope.launch {
             _modeType.value?.let { modeType ->

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoNotDisturb
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -83,6 +85,7 @@ fun ModePreferencesScreen(
         onAppSelectionClick = onAppSelectionClick,
         onToggleDND = viewModel::toggleDND,
         onDelete = viewModel::deleteMoment,
+        onUpdateModeType = viewModel::updateModeType,
     )
 }
 
@@ -96,10 +99,13 @@ fun ModePreferencesUI(
     onAppSelectionClick: () -> Unit,
     onToggleDND: () -> Unit,
     onDelete: () -> Unit = {},
+    onUpdateModeType: (String, String) -> Unit = { _, _ -> },
 ) {
     if (modeType == null) return
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditBottomSheet by remember { mutableStateOf(false) }
+    val bottomSheetState = rememberModalBottomSheetState()
 
     Scaffold(
         topBar = {
@@ -144,6 +150,17 @@ fun ModePreferencesUI(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
+
+            // Edit name and description preference (only for custom moments)
+            if (modeType.isCustom) {
+                PreferenceCard(
+                    title = "Edit Name & Description",
+                    subtitle = "Customize the name and description of this moment",
+                    icon = Icons.Default.Edit,
+                    onClick = { showEditBottomSheet = true },
+                    showArrow = true,
+                )
+            }
 
             // App selection preference
             PreferenceCard(
@@ -257,6 +274,18 @@ fun ModePreferencesUI(
             },
         )
     }
+
+    if (showEditBottomSheet) {
+        EditModeBottomSheet(
+            modeType = modeType,
+            sheetState = bottomSheetState,
+            onDismiss = { showEditBottomSheet = false },
+            onSave = { name, description ->
+                onUpdateModeType(name, description)
+                showEditBottomSheet = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -340,6 +369,7 @@ fun ModePreferencesScreenPreview() {
             onAppSelectionClick = {},
             onToggleDND = {},
             onDelete = {},
+            onUpdateModeType = { _, _ -> },
             isDNDEnabled = true,
         )
     }
@@ -362,6 +392,7 @@ fun ModePreferencesScreenNightPreview() {
             onAppSelectionClick = {},
             onToggleDND = {},
             onDelete = {},
+            onUpdateModeType = { _, _ -> },
             isDNDEnabled = false,
         )
     }

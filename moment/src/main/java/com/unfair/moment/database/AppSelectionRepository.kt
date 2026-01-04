@@ -107,6 +107,18 @@ class AppSelectionRepository(
         return modeType // Default modes are not custom
     }
 
+    suspend fun updateModeType(modeTypeId: String, name: String, description: String) {
+        modeTypeDao.getModeType(modeTypeId)?.let { existingModeType ->
+            modeTypeDao.updateModeType(
+                existingModeType.copy(
+                    name = name,
+                    description = description,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+
     suspend fun deleteModeType(modeTypeId: String) {
         // First delete all related data
         clearAppSelectionsForMode(modeTypeId)
