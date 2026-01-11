@@ -29,6 +29,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,27 +51,37 @@ class UnfairActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Configure status bar based on theme
-        val isLightTheme = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
+        val isLightTheme =
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
 
         enableEdgeToEdge(
             statusBarStyle = if (isLightTheme) {
                 SystemBarStyle.light(
                     android.graphics.Color.TRANSPARENT,
-                    android.graphics.Color.TRANSPARENT
+                    android.graphics.Color.TRANSPARENT,
                 )
             } else {
                 SystemBarStyle.dark(
-                    android.graphics.Color.TRANSPARENT
+                    android.graphics.Color.TRANSPARENT,
                 )
-            }
+            },
         )
 
         setContent {
             MomentTheme {
+                // Subtle radial gradient with theme colors
+                val gradientBackground = Brush.radialGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.background,
+                        colorResource(R.color.main_500),
+                    ),
+                    radius = 6000f,
+                )
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(gradientBackground),
+                    color = Color.Transparent,
                 ) {
                     UnfairApp {
                         launchApp(it)
@@ -204,21 +216,9 @@ fun UnfairUi(
         dndPermissionState.setDNDEnabled(currentMode?.isDNDActive ?: false)
     }
 
-    // Subtle gradient background inspired by weather app
-    val gradientBackground = Brush.verticalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f),
-            MaterialTheme.colorScheme.background,
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
-        ),
-        startY = 0f,
-        endY = 1500f,
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(gradientBackground)
             .padding(20.dp),
     ) {
         Column(
