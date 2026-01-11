@@ -1,5 +1,6 @@
 package com.unfair.moment
 
+import android.app.ActivityOptions
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,8 +25,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,15 +50,41 @@ class UnfairActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    UnfairApp()
+                    UnfairApp {
+                        launchApp(it)
+                    }
                 }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Set custom return animation when returning from an app
+        // Remove the isTaskRoot check as it might be preventing the animation
+        overridePendingTransition(R.anim.launcher_return_enter, R.anim.launcher_return_exit)
+    }
+
+    fun launchApp(app: AppInfo) {
+        val pm = application.packageManager
+        val intent = pm.getLaunchIntentForPackage(app.packageName)
+        intent?.let {
+            it.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            // Use our custom fade + scale animations
+            val options = ActivityOptions.makeCustomAnimation(
+                this,
+                R.anim.app_launch_enter,
+                R.anim.app_launch_exit
+            )
+
+            startActivity(it, options.toBundle())
         }
     }
 }
 
 @Composable
-fun UnfairApp() {
+fun UnfairApp(onLaunch: (app: AppInfo) -> Unit) {
     val navController = rememberNavController()
 
     NavHost(
@@ -67,7 +92,7 @@ fun UnfairApp() {
         startDestination = Screen.Main.route,
     ) {
         composable(Screen.Main.route) {
-            UnfairScreen(navController)
+            UnfairScreen(navController, onLaunch = onLaunch)
         }
 
         composable(Screen.ModeSelection.route) {
@@ -129,10 +154,10 @@ fun UnfairApp() {
 fun UnfairScreen(
     navController: NavController,
     viewModel: UnfairViewModel = hiltViewModel(),
+    onLaunch: (app: AppInfo) -> Unit,
 ) {
     val currentMode by viewModel.currentMode.collectAsState()
     val dndPermissionState = rememberDNDPermissionState()
-    val context = LocalContext.current
 
     UnfairUi(
         currentMode,
@@ -140,9 +165,7 @@ fun UnfairScreen(
         onEssentialsClick = {
             navController.navigate(Screen.ModeSelection.route)
         },
-        onAppClick = {
-            viewModel.launchApp(it, context)
-        },
+        onLaunch,
     )
 }
 
@@ -151,7 +174,7 @@ fun UnfairUi(
     currentMode: Mode?,
     dndPermissionState: DNDPermissionState,
     onEssentialsClick: () -> Unit,
-    onAppClick: (app: AppInfo) -> Unit,
+    onLaunch: (app: AppInfo) -> Unit,
 ) {
     val currentTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
     val currentDate = SimpleDateFormat("EEE, dd MMM", Locale.getDefault()).format(Date())
@@ -197,7 +220,7 @@ fun UnfairUi(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .clickable(onClick = onEssentialsClick)
-                        .padding(horizontal = 28.dp, vertical = 12.dp)
+                        .padding(horizontal = 28.dp, vertical = 12.dp),
                 )
             }
         }
@@ -208,7 +231,9 @@ fun UnfairUi(
         ) {
             if (selectedApps.isNotEmpty()) {
                 selectedApps.forEach { app ->
-                    TextButton(onClick = { onAppClick(app) }) {
+                    TextButton(
+                        onClick = { onLaunch(app) }
+                    ) {
                         Text(
                             text = app.name,
                             fontSize = 20.sp,
@@ -251,7 +276,7 @@ fun UnfairUiPreview() {
             setDNDEnabled = {},
             refreshPermissionState = {},
         ),
-        {}, {},
+        {}, { _ -> },
     )
 }
 
@@ -269,6 +294,6 @@ fun UnfairUi2Preview() {
             setDNDEnabled = {},
             refreshPermissionState = {},
         ),
-        {}, {},
+        {}, { _ -> },
     )
 }

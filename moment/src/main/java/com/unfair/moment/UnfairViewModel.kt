@@ -1,7 +1,6 @@
 package com.unfair.moment
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.unfair.moment.database.AppSelectionRepository
@@ -60,11 +59,6 @@ class UnfairViewModel @Inject constructor(
         }
     }
 
-    fun launchApp(app: AppInfo, context: Context) {
-        val pm = application.packageManager
-        val intent = pm.getLaunchIntentForPackage(app.packageName)
-        context.startActivity(intent)
-    }
 }
 
 
