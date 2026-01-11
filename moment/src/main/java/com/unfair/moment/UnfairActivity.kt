@@ -1,9 +1,12 @@
 package com.unfair.moment
 
 import android.app.ActivityOptions
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -12,7 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,6 +48,23 @@ import java.util.Locale
 class UnfairActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Configure status bar based on theme
+        val isLightTheme = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES
+
+        enableEdgeToEdge(
+            statusBarStyle = if (isLightTheme) {
+                SystemBarStyle.light(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT
+                )
+            } else {
+                SystemBarStyle.dark(
+                    android.graphics.Color.TRANSPARENT
+                )
+            }
+        )
+
         setContent {
             MomentTheme {
                 Surface(
@@ -75,7 +96,7 @@ class UnfairActivity : ComponentActivity() {
             val options = ActivityOptions.makeCustomAnimation(
                 this,
                 R.anim.app_launch_enter,
-                R.anim.app_launch_exit
+                R.anim.app_launch_exit,
             )
 
             startActivity(it, options.toBundle())
@@ -183,44 +204,55 @@ fun UnfairUi(
         dndPermissionState.setDNDEnabled(currentMode?.isDNDActive ?: false)
     }
 
+    // Subtle gradient background inspired by weather app
+    val gradientBackground = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f),
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
+        ),
+        startY = 0f,
+        endY = 1500f,
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
+            .background(gradientBackground)
+            .padding(20.dp),
     ) {
         Column(
             modifier = Modifier.align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(60.dp))
+
             Text(
                 text = currentTime,
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 64.sp,
+                fontWeight = FontWeight.Light,
                 color = MaterialTheme.colorScheme.onBackground,
             )
+
             Text(
                 text = currentDate,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium,
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(32.dp))
             Card(
-                shape = CircleShape,
-                modifier = Modifier,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                modifier = Modifier.clickable { onEssentialsClick() },
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
             ) {
                 Text(
                     text = currentMode?.type?.name ?: "Set Mode",
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .clickable(onClick = onEssentialsClick)
-                        .padding(horizontal = 28.dp, vertical = 12.dp),
+                    modifier = Modifier.padding(24.dp, 16.dp),
                 )
             }
         }
@@ -232,22 +264,26 @@ fun UnfairUi(
             if (selectedApps.isNotEmpty()) {
                 selectedApps.forEach { app ->
                     TextButton(
-                        onClick = { onLaunch(app) }
+                        onClick = { onLaunch(app) },
+                        colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
                     ) {
                         Text(
                             text = app.name,
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 8.dp),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(vertical = 12.dp),
                         )
                     }
                 }
             } else {
                 Text(
-                    text = "No apps selected",
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 12.dp),
+                    text = "No apps selected for this mode",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(vertical = 16.dp),
                 )
             }
             Spacer(modifier = Modifier.height(48.dp))
