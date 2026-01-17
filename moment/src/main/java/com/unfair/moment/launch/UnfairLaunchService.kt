@@ -1,5 +1,6 @@
 package com.unfair.moment.launch
 
+import android.app.ActivityManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -25,9 +26,6 @@ class UnfairLaunchService : Service(), SensorEventListener {
     companion object {
         private const val TAG = "UnfairLaunchService"
         private const val SHAKE_THRESHOLD = 12.0f // Acceleration threshold for shake detection
-        private const val SHAKE_TIMEOUT_MS = 1000L // Minimum time between shake detections
-        private const val SHAKE_COUNT_THRESHOLD = 1 // Number of shakes needed
-        private const val SHAKE_RESET_TIMEOUT_MS = 3000L // Reset shake count after this time
 
         fun start(context: Context) {
             val intent = Intent(context, UnfairLaunchService::class.java)
@@ -136,6 +134,11 @@ class UnfairLaunchService : Service(), SensorEventListener {
     }
 
     private fun launchUnfairActivity() {
+        // Only launch if current activity is LawnchairLauncher
+        if (getCurrentActivity() != CurrentActivity.Home) {
+            Log.d(TAG, "Not launching - current activity is not LawnchairLauncher")
+            return
+        }
         try {
             val intent = Intent(this, UnfairActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -155,4 +158,51 @@ class UnfairLaunchService : Service(), SensorEventListener {
             Log.e(TAG, "Failed to launch Unfair activity from shake", e)
         }
     }
+
+    /**
+     * Check if the current foreground activity is LawnchairLauncher
+     */
+    private fun getCurrentActivity(): CurrentActivity {
+        try {
+            val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+
+            // Get the current foreground task
+            val runningTasks = activityManager.getRunningTasks(1)
+            if (runningTasks.isEmpty()) {
+                Log.d(TAG, "No running tasks found")
+                return CurrentActivity.None
+            }
+
+            val topActivity = runningTasks[0].topActivity
+            if (topActivity == null) {
+                Log.d(TAG, "No top activity found")
+                return CurrentActivity.None
+            }
+
+            val currentClassName = topActivity.className
+            val currentPackageName = topActivity.packageName
+
+            Log.d(TAG, "Current foreground activity: $currentPackageName/$currentClassName")
+
+            // Check if the current activity is specifically LawnchairLauncher
+            return when (currentClassName) {
+                "app.lawnchair.LawnchairLauncher" -> CurrentActivity.Home
+                "app.lawnchair.UnfairActivity" -> CurrentActivity.Moment
+                else -> CurrentActivity.None
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking current activity", e)
+            // If we can't determine, be conservative and don't launch
+            return CurrentActivity.None
+        }
+    }
+
+
+}
+
+sealed interface CurrentActivity {
+    object Home : CurrentActivity
+    object Moment : CurrentActivity
+    object None : CurrentActivity
 }
