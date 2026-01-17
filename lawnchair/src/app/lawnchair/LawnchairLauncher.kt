@@ -83,10 +83,11 @@ import com.android.launcher3.widget.LauncherWidgetHolder
 import com.android.launcher3.widget.RoundedCornerEnforcement
 import com.android.systemui.plugins.shared.LauncherOverlayManager
 import com.android.systemui.shared.system.QuickStepContract
-import com.unfair.moment.UnfairActivity
 import com.kieronquinn.app.smartspacer.sdk.client.SmartspacerClient
 import com.patrykmichalik.opto.core.firstBlocking
 import com.patrykmichalik.opto.core.onEach
+import com.unfair.moment.UnfairActivity
+import com.unfair.moment.launch.UnfairLaunchManager
 import dev.kdrag0n.monet.theme.ColorScheme
 import java.util.stream.Stream
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -100,6 +101,8 @@ class LawnchairLauncher : QuickstepLauncher() {
     private val preferenceManager2 by unsafeLazy { PreferenceManager2.getInstance(this) }
     private val insetsController by unsafeLazy { WindowInsetsControllerCompat(launcher.window, rootView) }
     private val themeProvider by unsafeLazy { ThemeProvider.INSTANCE.get(this) }
+    private val launchManager by unsafeLazy { UnfairLaunchManager(application) }
+
     private val noStatusBarStateListener = object : StateManager.StateListener<LauncherState> {
         override fun onStateTransitionStart(toState: LauncherState) {
             if (toState is OverviewState) {
@@ -163,6 +166,9 @@ class LawnchairLauncher : QuickstepLauncher() {
         }
         layoutInflater.factory2 = LawnchairLayoutFactory(this)
         super.onCreate(savedInstanceState)
+
+        // shake to launch
+        launchManager.startLaunchServices()
 
         prefs.launcherTheme.subscribeChanges(this, ::updateTheme)
         prefs.feedProvider.subscribeChanges(this, defaultOverlay::reconnect)
@@ -473,6 +479,9 @@ class LawnchairLauncher : QuickstepLauncher() {
         super.onDestroy()
         // Only actually closes if required, safe to call if not enabled
         SmartspacerClient.close()
+
+        // Stop launch services when activity is destroyed
+        launchManager.stopLaunchServices()
     }
 
     override fun getDefaultOverlay(): LauncherOverlayManager = defaultOverlay

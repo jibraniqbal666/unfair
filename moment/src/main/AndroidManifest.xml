@@ -4,6 +4,11 @@
     <!-- Permission to access and modify Do Not Disturb settings -->
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
 
+    <!-- Permissions for shake detection -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
     <application>
         <activity
             android:name=".UnfairActivity"
@@ -11,6 +16,16 @@
             android:theme="@style/AppTheme"
             android:launchMode="singleTask">
         </activity>
+
+        <!-- Service for shake detection -->
+        <service
+            android:name=".launch.UnfairLaunchService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="launcher_assistant" />
+        </service>
     </application>
 
 </manifest>
