@@ -8,8 +8,11 @@ import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -21,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -39,7 +44,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class UnfairOverlayView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
+    defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
     private var onDismissCallback: (() -> Unit)? = null
@@ -49,12 +54,22 @@ class UnfairOverlayView @JvmOverloads constructor(
         // Make the overlay take full screen
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
 
+        // Don't fit system windows - we want to draw behind status bar and nav bar
+        fitsSystemWindows = false
+
         // Set up compose view
         composeView = ComposeView(context).apply {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+            fitsSystemWindows = false
         }
 
         addView(composeView)
+
+        // Consume window insets so we can draw behind system bars
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
+            // Don't consume - let the view draw behind system bars
+            insets
+        }
 
         // Set up the compose content
         setupComposeContent()
@@ -76,12 +91,13 @@ class UnfairOverlayView @JvmOverloads constructor(
                 },
                 onLaunchApp = { appInfo ->
                     // Launch app through the launcher
-                    val intent = context.packageManager.getLaunchIntentForPackage(appInfo.packageName)
+                    val intent =
+                        context.packageManager.getLaunchIntentForPackage(appInfo.packageName)
                     if (intent != null) {
                         context.startActivity(intent)
                     }
                     // Don't dismiss - overlay will persist when returning home
-                }
+                },
             )
         }
     }
@@ -104,7 +120,7 @@ class UnfairOverlayView @JvmOverloads constructor(
 @Composable
 private fun UnfairOverlayContent(
     onClose: () -> Unit,
-    onLaunchApp: (AppInfo) -> Unit
+    onLaunchApp: (AppInfo) -> Unit,
 ) {
     val navController = rememberNavController()
 
@@ -120,21 +136,21 @@ private fun UnfairOverlayContent(
         val gradientBackground = Brush.radialGradient(
             colors = listOf(
                 MaterialTheme.colorScheme.background,
-                colorResource(R.color.main_500)
+                colorResource(R.color.main_500),
             ),
-            radius = 6000f
+            radius = 6000f,
         )
 
         Surface(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradientBackground),
-            color = Color.Transparent
+            color = Color.Transparent,
         ) {
             UnfairNavigation(
                 navController = navController,
                 onLaunchApp = onLaunchApp,
-                onClose = onClose
+                onClose = onClose,
             )
         }
     }
@@ -144,17 +160,17 @@ private fun UnfairOverlayContent(
 private fun UnfairNavigation(
     navController: NavHostController,
     onLaunchApp: (AppInfo) -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Main.route
+        startDestination = Screen.Main.route,
     ) {
         composable(Screen.Main.route) {
             UnfairMainScreen(
                 navController = navController,
                 onLaunchApp = onLaunchApp,
-                onClose = onClose
+                onClose = onClose,
             )
         }
 
@@ -168,7 +184,7 @@ private fun UnfairNavigation(
                 },
                 onAddMoment = {
                     navController.navigate(Screen.AddMoment.route)
-                }
+                },
             )
         }
 
@@ -182,7 +198,7 @@ private fun UnfairNavigation(
                 },
                 onAppSelectionClick = {
                     navController.navigate(Screen.AppSelection(modeTypeId).route)
-                }
+                },
             )
         }
 
@@ -199,7 +215,7 @@ private fun UnfairNavigation(
                 },
                 onClose = {
                     navController.popBackStack(Screen.Main.route, inclusive = false)
-                }
+                },
             )
         }
 
@@ -207,7 +223,7 @@ private fun UnfairNavigation(
             AddMomentScreen(
                 onBack = {
                     navController.popBackStack()
-                }
+                },
             )
         }
     }
@@ -218,19 +234,23 @@ private fun UnfairMainScreen(
     navController: NavController,
     viewModel: UnfairViewModel = hiltViewModel(),
     onLaunchApp: (AppInfo) -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
 ) {
     val currentMode by viewModel.currentMode.collectAsState()
     val dndPermissionState = rememberDNDPermissionState()
 
-    Box(modifier = Modifier.padding(20.dp)) {
+    Box(
+        modifier = Modifier
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .padding(20.dp),
+    ) {
         UnfairUi(
             currentMode = currentMode,
             dndPermissionState = dndPermissionState,
             onEssentialsClick = {
                 navController.navigate(Screen.ModeSelection.route)
             },
-            onLaunch = onLaunchApp
+            onLaunch = onLaunchApp,
         )
     }
 }

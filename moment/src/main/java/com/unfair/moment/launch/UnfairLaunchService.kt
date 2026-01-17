@@ -14,8 +14,6 @@ import android.hardware.SensorManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,7 +45,6 @@ class UnfairLaunchService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
     private lateinit var wakeLock: PowerManager.WakeLock
-    private lateinit var vibrator: Vibrator
 
     private var lastAcceleration = SensorManager.GRAVITY_EARTH
     private var currentAcceleration = SensorManager.GRAVITY_EARTH
@@ -58,7 +55,6 @@ class UnfairLaunchService : Service(), SensorEventListener {
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
         // Acquire wake lock to keep service running
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -189,13 +185,6 @@ class UnfairLaunchService : Service(), SensorEventListener {
             sendBroadcast(intent)
 
             Log.d(TAG, "Successfully triggered Unfair overlay from shake")
-
-            // Provide success haptic feedback
-            if (vibrator.hasVibrator()) {
-                val pattern = longArrayOf(0, 100, 100, 100) // Short-long-short vibration
-                val vibrationEffect = VibrationEffect.createWaveform(pattern, -1)
-                vibrator.vibrate(vibrationEffect)
-            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to show Unfair overlay from shake", e)
         }

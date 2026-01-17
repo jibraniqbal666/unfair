@@ -27,10 +27,13 @@ import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.util.Pair
 import android.view.Display
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.window.SplashScreen
 import androidx.activity.SystemBarStyle
@@ -113,6 +116,7 @@ class LawnchairLauncher : QuickstepLauncher() {
     }
     private val themeProvider by unsafeLazy { ThemeProvider.INSTANCE.get(this) }
     private val launchManager by unsafeLazy { UnfairLaunchManager(application) }
+    private lateinit var vibrator: Vibrator
 
     // Broadcast receiver for shake detection
     private val unfairBroadcastReceiver = object : BroadcastReceiver() {
@@ -195,6 +199,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
         // shake to launch
         launchManager.startLaunchServices()
+        vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
 
         prefs.launcherTheme.subscribeChanges(this, ::updateTheme)
         prefs.feedProvider.subscribeChanges(this, defaultOverlay::reconnect)
@@ -381,10 +386,19 @@ class LawnchairLauncher : QuickstepLauncher() {
      * Called from long press and shake detection
      */
     fun showUnfairOverlay() {
+        val decorView = window.decorView as ViewGroup
+
         // Check if overlay is already shown
-        val existingOverlay = dragLayer.findViewWithTag<UnfairOverlayView>("unfair_overlay")
+        val existingOverlay = decorView.findViewWithTag<UnfairOverlayView>("unfair_overlay")
         if (existingOverlay != null) {
             return
+        }
+
+        // Provide success haptic feedback
+        if (vibrator.hasVibrator()) {
+            val pattern = longArrayOf(0, 100, 100, 100) // Short-long-short vibration
+            val vibrationEffect = VibrationEffect.createWaveform(pattern, -1)
+            vibrator.vibrate(vibrationEffect)
         }
 
         // Create and show the overlay view
@@ -395,8 +409,8 @@ class LawnchairLauncher : QuickstepLauncher() {
             }
         }
 
-        // Add overlay to the dragLayer
-        dragLayer.addView(unfairOverlay)
+        // Add overlay to the decor view for true full-screen coverage
+        decorView.addView(unfairOverlay)
 
         // Animate entrance
         unfairOverlay.alpha = 0f
@@ -410,14 +424,15 @@ class LawnchairLauncher : QuickstepLauncher() {
      * Hide the Unfair overlay view
      */
     fun hideUnfairOverlay() {
-        val overlay = dragLayer.findViewWithTag<UnfairOverlayView>("unfair_overlay")
+        val decorView = window.decorView as ViewGroup
+        val overlay = decorView.findViewWithTag<UnfairOverlayView>("unfair_overlay")
         if (overlay != null) {
             // Animate exit then remove
             overlay.animate()
                 .alpha(0f)
                 .setDuration(300)
                 .withEndAction {
-                    dragLayer.removeView(overlay)
+                    decorView.removeView(overlay)
                 }
                 .start()
         }
