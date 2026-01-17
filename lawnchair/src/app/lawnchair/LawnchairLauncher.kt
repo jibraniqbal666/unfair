@@ -365,20 +365,20 @@ class LawnchairLauncher : QuickstepLauncher() {
     }
 
     override fun showDefaultOptions(x: Float, y: Float) {
-//        val showWallpaperCarousel = "+carousel" in preferenceManager2.launcherPopupOrder.firstBlocking()
-//
-//        if (showWallpaperCarousel) {
-//            show<LawnchairLauncher>(
-//                this,
-//                getPopupTarget(x, y),
-//                OptionsPopupView.getOptions(this),
-//            )
-//        } else {
-//            super.showDefaultOptions(x, y)
-//        }
+        val showWallpaperCarousel = "+carousel" in preferenceManager2.launcherPopupOrder.firstBlocking()
+
+        if (showWallpaperCarousel) {
+            show<LawnchairLauncher>(
+                this,
+                getPopupTarget(x, y),
+                OptionsPopupView.getOptions(this),
+            )
+        } else {
+            super.showDefaultOptions(x, y)
+        }
 
         // Show Unfair overlay instead of starting activity
-        showUnfairOverlay()
+//        showUnfairOverlay()
     }
 
     /**
