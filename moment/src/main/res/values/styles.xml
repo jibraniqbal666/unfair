@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowAnimationStyle">@style/CustomWindowAnimation</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <style name="CustomWindowAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/app_launch_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/app_launch_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/launcher_return_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/launcher_return_exit</item>
+    </style>
+</resources>

@@ -18,6 +18,7 @@ plugins {
     alias(libs.plugins.cash.licensee)
     alias(libs.plugins.rikka.refine)
     alias(libs.plugins.diffplug.spotless)
+    alias(libs.plugins.hilt.android)
 }
 
 
@@ -173,7 +174,7 @@ android {
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach {
             def channel = variant.productFlavors.last().name
-            outputFileName = "Lawnchair.${variant.versionName}.$channel.${variant.buildType.name}.apk"
+            outputFileName = "Unfair.${variant.versionName}.$channel.${variant.buildType.name}.apk"
         }
     }
 
@@ -244,11 +245,11 @@ android {
 
         debug {
             applicationIdSuffix ".debug"
-            resValue("string", "derived_app_name", "Lawnchair (Debug)")
+            resValue("string", "derived_app_name", "Unfair (Debug)")
         }
 
         release {
-            resValue("string", "derived_app_name", "Lawnchair")
+            resValue("string", "derived_app_name", "Unfair")
             minifyEnabled true
             shrinkResources true
             proguardFiles proguardFilesFromAosp + "proguard.pro"
@@ -278,17 +279,17 @@ android {
         }
 
         github {
-            applicationId 'app.lawnchair'
+            applicationId 'app.unfair'
             dimension "channel"
         }
 
         nightly {
-            applicationId 'app.lawnchair.nightly'
+            applicationId 'app.unfair.nightly'
             dimension "channel"
         }
 
         play {
-            applicationId "app.lawnchair.play"
+            applicationId "app.unfair"
             dimension "channel"
             isDefault true
         }
@@ -453,6 +454,10 @@ dependencies {
     implementation libs.hoko.blur
 
     implementation libs.androidx.window
+
+    implementation projects.moment
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
 }
 
 ksp {
