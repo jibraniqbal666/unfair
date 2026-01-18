@@ -1,4 +1,4 @@
-name: Build and Release APK
+name: Build and Release APK and AAB
 
 on:
   workflow_dispatch:
@@ -41,8 +41,8 @@ jobs:
             echo ${{ secrets.KEYSTORE }} | base64 --decode > ${{ github.workspace }}/key.jks
           fi
 
-      - name: Build Release APK
-        run: ./gradlew assembleLawnWithQuickstepGithubRelease --no-configuration-cache
+      - name: Build Release APK and AAB
+        run: ./gradlew assembleLawnWithQuickstepGithubRelease bundleLawnWithQuickstepPlayRelease
 
       - name: Get version info
         id: version
@@ -55,16 +55,17 @@ jobs:
           echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Rename APK
+      - name: Rename APK and AAB
         run: |
           mkdir -p release
           mv build/outputs/apk/lawnWithQuickstepGithub/release/*.apk release/Unfair-${{ steps.version.outputs.version }}.apk
+          mv build/outputs/bundle/lawnWithQuickstepPlayRelease/*.aab release/Unfair-${{ steps.version.outputs.version }}.aab
 
-      - name: Upload APK Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Unfair-APK
-          path: release/*.apk
+          name: Unfair-Release
+          path: release/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -77,14 +78,18 @@ jobs:
             **Release Date:** ${{ steps.version.outputs.date }}
             **Commit:** ${{ steps.version.outputs.sha_short }}
 
-            ### Installation
+            ### Downloads
+            - **APK** - Direct install on Android devices
+            - **AAB** - For Play Store distribution
+
+            ### Installation (APK)
             1. Download the APK file below
             2. Enable "Install from unknown sources" if prompted
             3. Install and enjoy!
 
             ---
             *Built automatically from commit ${{ github.sha }}*
-          files: release/*.apk
+          files: release/*
           draft: false
           prerelease: false
         env:
