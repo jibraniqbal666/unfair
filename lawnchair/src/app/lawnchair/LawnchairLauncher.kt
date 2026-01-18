@@ -18,15 +18,22 @@ package app.lawnchair
 
 import android.animation.AnimatorSet
 import android.app.ActivityOptions
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.util.Log
 import android.util.Pair
 import android.view.Display
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.window.SplashScreen
 import androidx.activity.SystemBarStyle
@@ -86,6 +93,9 @@ import com.android.systemui.shared.system.QuickStepContract
 import com.kieronquinn.app.smartspacer.sdk.client.SmartspacerClient
 import com.patrykmichalik.opto.core.firstBlocking
 import com.patrykmichalik.opto.core.onEach
+import com.unfair.moment.UnfairOverlayView
+import com.unfair.moment.launch.UnfairLaunchManager
+import dagger.hilt.android.AndroidEntryPoint
 import dev.kdrag0n.monet.theme.ColorScheme
 import java.util.stream.Stream
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -93,18 +103,40 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class LawnchairLauncher : QuickstepLauncher() {
     private val defaultOverlay by unsafeLazy { OverlayCallbackImpl(this) }
     private val prefs by unsafeLazy { PreferenceManager.getInstance(this) }
     private val preferenceManager2 by unsafeLazy { PreferenceManager2.getInstance(this) }
-    private val insetsController by unsafeLazy { WindowInsetsControllerCompat(launcher.window, rootView) }
+    private val insetsController by unsafeLazy {
+        WindowInsetsControllerCompat(
+            launcher.window,
+            rootView,
+        )
+    }
     private val themeProvider by unsafeLazy { ThemeProvider.INSTANCE.get(this) }
+    private val launchManager by unsafeLazy { UnfairLaunchManager(application) }
+    private lateinit var vibrator: Vibrator
+
+    // Broadcast receiver for shake detection
+    private val unfairBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i("LawnchairLauncher", intent?.action ?: "odd")
+            when (intent?.action) {
+                "com.unfair.moment.SHOW_OVERLAY" -> {
+                    showUnfairOverlay()
+                }
+            }
+        }
+    }
+
     private val noStatusBarStateListener = object : StateManager.StateListener<LauncherState> {
         override fun onStateTransitionStart(toState: LauncherState) {
             if (toState is OverviewState) {
                 insetsController.show(WindowInsetsCompat.Type.statusBars())
             }
         }
+
         override fun onStateTransitionComplete(finalState: LauncherState) {
             if (finalState !is OverviewState) {
                 insetsController.hide(WindowInsetsCompat.Type.statusBars())
@@ -117,6 +149,7 @@ class LawnchairLauncher : QuickstepLauncher() {
                 mAppsView.activeRecyclerView.restoreScrollPosition()
             }
         }
+
         override fun onStateTransitionComplete(finalState: LauncherState) {}
     }
     private val statusBarClockListener = object : StateManager.StateListener<LauncherState> {
@@ -125,7 +158,7 @@ class LawnchairLauncher : QuickstepLauncher() {
                 is BackgroundAppState,
                 is OverviewState,
                 is AllAppsState,
-                -> {
+                    -> {
                     LawnchairApp.instance.restoreClockInStatusBar()
                 }
 
@@ -134,6 +167,7 @@ class LawnchairLauncher : QuickstepLauncher() {
                 }
             }
         }
+
         override fun onStateTransitionComplete(finalState: LauncherState) {}
     }
     private val clearSearchStateListener = object : StateManager.StateListener<LauncherState> {
@@ -162,6 +196,10 @@ class LawnchairLauncher : QuickstepLauncher() {
         }
         layoutInflater.factory2 = LawnchairLayoutFactory(this)
         super.onCreate(savedInstanceState)
+
+        // shake to launch
+        launchManager.startLaunchServices()
+        vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
 
         prefs.launcherTheme.subscribeChanges(this, ::updateTheme)
         prefs.feedProvider.subscribeChanges(this, defaultOverlay::reconnect)
@@ -228,7 +266,10 @@ class LawnchairLauncher : QuickstepLauncher() {
         }
         val isWorkspaceDarkText = Themes.getAttrBoolean(this, R.attr.isWorkspaceDarkText)
         preferenceManager2.darkStatusBar.onEach(launchIn = lifecycleScope) { darkStatusBar ->
-            systemUiController.updateUiState(UI_STATE_BASE_WINDOW, isWorkspaceDarkText || darkStatusBar)
+            systemUiController.updateUiState(
+                UI_STATE_BASE_WINDOW,
+                isWorkspaceDarkText || darkStatusBar,
+            )
         }
         preferenceManager2.backPressGestureHandler.onEach(launchIn = lifecycleScope) { handler ->
             hasBackGesture = handler !is GestureHandlerConfig.NoOp
@@ -335,6 +376,66 @@ class LawnchairLauncher : QuickstepLauncher() {
         } else {
             super.showDefaultOptions(x, y)
         }
+
+        // Show Unfair overlay instead of starting activity
+//        showUnfairOverlay()
+    }
+
+    /**
+     * Show the Unfair overlay view on the launcher
+     * Called from long press and shake detection
+     */
+    fun showUnfairOverlay() {
+        val decorView = window.decorView as ViewGroup
+
+        // Check if overlay is already shown
+        val existingOverlay = decorView.findViewWithTag<UnfairOverlayView>("unfair_overlay")
+        if (existingOverlay != null) {
+            return
+        }
+
+        // Provide success haptic feedback
+        if (vibrator.hasVibrator()) {
+            val pattern = longArrayOf(0, 100, 100, 100) // Short-long-short vibration
+            val vibrationEffect = VibrationEffect.createWaveform(pattern, -1)
+            vibrator.vibrate(vibrationEffect)
+        }
+
+        // Create and show the overlay view
+        val unfairOverlay = UnfairOverlayView(this).apply {
+            tag = "unfair_overlay"
+            setOnDismissCallback {
+                hideUnfairOverlay()
+            }
+        }
+
+        // Add overlay to the decor view for true full-screen coverage
+        decorView.addView(unfairOverlay)
+
+        // Animate entrance
+        unfairOverlay.alpha = 0f
+        unfairOverlay.animate()
+            .alpha(1f)
+            .setDuration(300)
+            .start()
+    }
+
+    /**
+     * Hide the Unfair overlay view
+     */
+    fun hideUnfairOverlay() {
+        val decorView = window.decorView as ViewGroup
+        val overlay = decorView.findViewWithTag<UnfairOverlayView>("unfair_overlay")
+        if (overlay != null) {
+            // Animate exit then remove
+            overlay.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction {
+                    decorView.removeView(overlay)
+                }
+                .start()
+        }
     }
 
     private fun <T> show(
@@ -347,14 +448,20 @@ class LawnchairLauncher : QuickstepLauncher() {
         if (activityContext == null) return null
 
         val isEmpty = WallpaperService.INSTANCE.get(this).getTopWallpapers().isEmpty()
-        val layout = if (isEmpty) R.layout.longpress_options_menu else R.layout.wallpaper_options_popup
+        val layout =
+            if (isEmpty) R.layout.longpress_options_menu else R.layout.wallpaper_options_popup
 
-        val popup = activityContext.layoutInflater.inflate(layout, activityContext.dragLayer, false) as OptionsPopupView<T>
+        val popup = activityContext.layoutInflater.inflate(
+            layout,
+            activityContext.dragLayer,
+            false,
+        ) as OptionsPopupView<T>
         popup.setTargetRect(targetRect)
         popup.setShouldAddArrow(shouldAddArrow)
 
         for (item in items) {
-            val deepLayout = if (isEmpty) R.layout.system_shortcut else R.layout.wallpaper_options_popup_item
+            val deepLayout =
+                if (isEmpty) R.layout.system_shortcut else R.layout.wallpaper_options_popup_item
 
             val view = popup.inflateAndAdd<DeepShortcutView>(deepLayout, popup)
             if (width > 0) view.layoutParams.width = width
@@ -370,7 +477,8 @@ class LawnchairLauncher : QuickstepLauncher() {
     }
 
     override fun createAppWidgetHolder(): LauncherWidgetHolder {
-        val factory = LauncherWidgetHolder.HolderFactory.newFactory(this) as LawnchairWidgetHolder.LawnchairHolderFactory
+        val factory =
+            LauncherWidgetHolder.HolderFactory.newFactory(this) as LawnchairWidgetHolder.LawnchairHolderFactory
         return factory.newInstance(
             this,
         ) { appWidgetId: Int ->
@@ -439,13 +547,22 @@ class LawnchairLauncher : QuickstepLauncher() {
         if (Utilities.ATLEAST_T) {
             options.splashScreenStyle = SplashScreen.SPLASH_SCREEN_STYLE_ICON
         }
-        options.launchDisplayId = if (v.display != null) v.display.displayId else Display.DEFAULT_DISPLAY
+        options.launchDisplayId =
+            if (v.display != null) v.display.displayId else Display.DEFAULT_DISPLAY
         val callback = RunnableList()
         return ActivityOptionsWrapper(options, callback)
     }
 
     override fun onResume() {
         super.onResume()
+
+        val filter = IntentFilter("com.unfair.moment.SHOW_OVERLAY")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(unfairBroadcastReceiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(unfairBroadcastReceiver, filter)
+        }
+
         restartIfPending()
 
         dragLayer.viewTreeObserver.addOnDrawListener(
@@ -467,10 +584,25 @@ class LawnchairLauncher : QuickstepLauncher() {
         )
     }
 
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(unfairBroadcastReceiver)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // Only actually closes if required, safe to call if not enabled
         SmartspacerClient.close()
+
+        // Unregister broadcast receiver
+        try {
+            unregisterReceiver(unfairBroadcastReceiver)
+        } catch (e: IllegalArgumentException) {
+            // Receiver was not registered
+        }
+
+        // Stop launch services when activity is destroyed
+        launchManager.stopLaunchServices()
     }
 
     override fun getDefaultOverlay(): LauncherOverlayManager = defaultOverlay
@@ -516,8 +648,9 @@ class LawnchairLauncher : QuickstepLauncher() {
 val Context.launcher: LawnchairLauncher
     get() = BaseActivity.fromContext(this)
 
-val Context.launcherNullable: LawnchairLauncher? get() = try {
-    launcher
-} catch (_: IllegalArgumentException) {
-    null
-}
+val Context.launcherNullable: LawnchairLauncher?
+    get() = try {
+        launcher
+    } catch (_: IllegalArgumentException) {
+        null
+    }
